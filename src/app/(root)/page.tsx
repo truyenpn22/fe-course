@@ -1,12 +1,11 @@
 
 
 import MaxWidthWrapper from "@/components/MaxWidthWrapper";
-import { Button, ButtonRounded } from "@/components/ui/Button";
+import { Button } from "@/components/ui/Button";
 
 
 
 export default function Home() {
-
   return (
     <>
       <MaxWidthWrapper className="bg-[#182b50] p-8 font-[sans-serif] max-w-full">
@@ -136,6 +135,8 @@ export default function Home() {
           </div>
         </div>
       </MaxWidthWrapper>
+
+
     </>
   )
 }

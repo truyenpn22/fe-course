@@ -1,17 +1,57 @@
-import Image from "next/image";
-import LogoLogin from "../../../assets/login.png"
-import Link from "next/link"
+'use client';
+import { useState, FormEvent, useEffect } from 'react';
+import { useRouter } from 'next/navigation'
+
+const SignIn: React.FC = () => {
+    const [email, setEmail] = useState<string>('');
+    const [password, setPassword] = useState<string>('');
+    const [loading, setLoading] = useState<boolean>(false);
+    const [error, setError] = useState<string | null>(null);
+    const router = useRouter()
+
+    useEffect(() => {
+        const token = localStorage.getItem('user');
+        if (token) {
+            router.push('/');
+        }
+    }, []);
+
+    const handleSubmit = async (e: FormEvent) => {
+        e.preventDefault();
+        setLoading(true);
+        setError(null);
+
+        try {
+            const response = await fetch('http://localhost:5000/api/v1/auth/login', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ email, password }),
+            });
+
+            const data = await response.json();
+
+            if (!response.ok) {
+                throw new Error(data.message || 'Login failed');
+            }
+            localStorage.setItem('user', data.token);
+            router.push('/');
+        } catch (err: any) {
+            setError(err.message);
+        } finally {
+            setLoading(false);
+        }
+    };
 
 
-
-const SignIn = () => {
     return (
         <div className="font-[sans-serif] bg-gradient-to-r from-purple-900 via-purple-800 to-purple-600 text-[#333]">
-            <div className="min-h-screen-minus-72 flex fle-col items-center justify-center lg:p-6 p-4">
+            <div className="min-h-screen-minus-72 flex flex-col items-center justify-center lg:p-6 p-4">
                 <div className="grid md:grid-cols-2 items-center gap-10 max-w-6xl w-full">
                     <div className="max-md:text-center">
-                        <a ><img
-                            src="https://readymadeui.com/readymadeui-white.svg" alt="logo" className='w-52 mb-10 inline-block' />
+                        <a>
+                            <img src="https://readymadeui.com/readymadeui-white.svg" alt="logo" className='w-52 mb-10 inline-block' />
                         </a>
                         <h2 className="text-4xl font-extrabold lg:leading-[50px] text-white">
                             Seamless Login for Exclusive Access
@@ -19,30 +59,50 @@ const SignIn = () => {
                         <p className="text-sm mt-6 text-white">Immerse yourself in a hassle-free login journey with our intuitively designed login form. Effortlessly access your account.</p>
                         <p className="text-sm mt-10 text-white">Don't have an account <a className="text-white font-semibold underline ml-1">Register here</a></p>
                     </div>
-                    <form className="bg-white rounded-xl px-6 py-8 space-y-6 max-w-md md:ml-auto max-md:mx-auto w-full">
+                    <form onSubmit={handleSubmit} className="bg-white rounded-xl px-6 py-8 space-y-6 max-w-md md:ml-auto max-md:mx-auto w-full">
                         <h3 className="text-3xl font-extrabold mb-12 max-md:text-center">
                             Sign in
                         </h3>
+                        {error && <div className="text-red-500">{error}</div>}
                         <div>
-                            <input name="email" type="email" required className="bg-gray-100 w-full text-sm px-4 py-3.5 rounded-md outline-[#333]" placeholder="Email address" />
+                            <input
+                                name="email"
+                                type="email"
+                                required
+                                className="bg-gray-100 w-full text-sm px-4 py-3.5 rounded-md outline-[#333]"
+                                placeholder="Email address"
+                                value={email}
+                                onChange={(e) => setEmail(e.target.value)}
+                            />
                         </div>
                         <div>
-                            <input name="password" type="password" required className="bg-gray-100 w-full text-sm px-4 py-3.5 rounded-md outline-[#333]" placeholder="Password" />
+                            <input
+                                name="password"
+                                type="password"
+                                required
+                                className="bg-gray-100 w-full text-sm px-4 py-3.5 rounded-md outline-[#333]"
+                                placeholder="Password"
+                                value={password}
+                                onChange={(e) => setPassword(e.target.value)}
+                            />
                         </div>
                         <div className="text-sm text-right">
-                            <a href="jajvascript:void(0);" className="text-blue-600 hover:underline">
+                            <a className="text-blue-600 hover:underline">
                                 Forgot your password?
                             </a>
                         </div>
                         <div className="!mt-10">
-                            <button type="button" className="w-full shadow-xl py-2.5 px-4 text-sm font-semibold rounded text-white bg-[#333] hover:bg-[#222] focus:outline-none">
-                                Log in
+                            <button
+                                type="submit"
+                                className="w-full shadow-xl py-2.5 px-4 text-sm font-semibold rounded text-white bg-[#333] hover:bg-[#222] focus:outline-none"
+                                disabled={loading}
+                            >
+                                {loading ? 'Logging in...' : 'Log in'}
                             </button>
                         </div>
                         <p className="my-10 text-sm text-gray-400 text-center">or continue with</p>
                         <div className="space-x-6 flex justify-center">
-                            <button type="button"
-                                className="border-none outline-none">
+                            <button type="button" className="border-none outline-none">
                                 <svg xmlns="http://www.w3.org/2000/svg" width="30px" className="inline" viewBox="0 0 512 512">
                                     <path fill="#fbbd00"
                                         d="M120 256c0-25.367 6.989-49.13 19.131-69.477v-86.308H52.823C18.568 144.703 0 198.922 0 256s18.568 111.297 52.823 155.785h86.308v-86.308C126.989 305.13 120 281.367 120 256z"
@@ -64,14 +124,12 @@ const SignIn = () => {
                                         data-original="#eb4132" />
                                 </svg>
                             </button>
-                            <button type="button"
-                                className="border-none outline-none">
+                            <button type="button" className="border-none outline-none">
                                 <svg xmlns="http://www.w3.org/2000/svg" width="30px" fill="#000" viewBox="0 0 22.773 22.773">
                                     <path d="M15.769 0h.162c.13 1.606-.483 2.806-1.228 3.675-.731.863-1.732 1.7-3.351 1.573-.108-1.583.506-2.694 1.25-3.561C13.292.879 14.557.16 15.769 0zm4.901 16.716v.045c-.455 1.378-1.104 2.559-1.896 3.655-.723.995-1.609 2.334-3.191 2.334-1.367 0-2.275-.879-3.676-.903-1.482-.024-2.297.735-3.652.926h-.462c-.995-.144-1.798-.932-2.383-1.642-1.725-2.098-3.058-4.808-3.306-8.276v-1.019c.105-2.482 1.311-4.5 2.914-5.478.846-.52 2.009-.963 3.304-.765.555.086 1.122.276 1.619.464.471.181 1.06.502 1.618.485.378-.011.754-.208 1.135-.347 1.116-.403 2.21-.865 3.652-.648 1.733.262 2.963 1.032 3.723 2.22-1.466.933-2.625 2.339-2.427 4.74.176 2.181 1.444 3.457 3.028 4.209z" data-original="#000000"></path>
                                 </svg>
                             </button>
-                            <button type="button"
-                                className="border-none outline-none">
+                            <button type="button" className="border-none outline-none">
                                 <svg xmlns="http://www.w3.org/2000/svg" width="30px" fill="#007bff" viewBox="0 0 167.657 167.657">
                                     <path d="M83.829.349C37.532.349 0 37.881 0 84.178c0 41.523 30.222 75.911 69.848 82.57v-65.081H49.626v-23.42h20.222V60.978c0-20.037 12.238-30.956 30.115-30.956 8.562 0 15.92.638 18.056.919v20.944l-12.399.006c-9.72 0-11.594 4.618-11.594 11.397v14.947h23.193l-3.025 23.42H94.026v65.653c41.476-5.048 73.631-40.312 73.631-83.154 0-46.273-37.532-83.805-83.828-83.805z" data-original="#010002"></path>
                                 </svg>
@@ -81,7 +139,9 @@ const SignIn = () => {
                 </div>
             </div>
         </div>
-    )
-}
+    );
+};
 
-export default SignIn 
+export default SignIn;
+
+
